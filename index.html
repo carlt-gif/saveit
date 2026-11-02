@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save the Date - Carl & Emma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --emerald: #0f382c;
+            --deep-forest: #082119;
+            --gold: #d4af37;
+            --soft-gold: #f4e8c1;
+            --cream: #faf8f5;
+            --white: #ffffff;
+            --shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at center, var(--emerald), var(--deep-forest));
+            color: var(--cream);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Outer Envelope Container */
+        .card-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 580px;
+        }
+
+        .main-card {
+            background: rgba(15, 56, 44, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gold Foil Accents */
+        .gold-border {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 1px solid var(--gold);
+            border-radius: 14px;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .tagline {
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+
+        h1.couple-names {
+            font-family: 'Cinzel', serif;
+            font-size: 2.8rem;
+            color: var(--soft-gold);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        p.subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: rgba(250, 248, 245, 0.85);
+            margin-bottom: 30px;
+        }
+
+        /* Scratch-Off Feature */
+        .scratch-container {
+            position: relative;
+            width: 280px;
+            height: 90px;
+            margin: 0 auto 30px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            border: 2px solid var(--gold);
+        }
+
+        .scratch-reveal-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--cream);
+            color: var(--deep-forest);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        }
+
+        .scratch-reveal-content .date {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--emerald);
+        }
+
+        .scratch-reveal-content .venue {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            margin-top: 4px;
+        }
+
+        canvas#scratchCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        .instruction-hint {
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 25px;
+            animation: pulse 2s infinite;
+        }
+
+        /* Story Mini-Game / Quiz */
+        .interactive-zone {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .quiz-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem;
+            margin-bottom: 15px;
+            color: var(--soft-gold);
+        }
+
+        .quiz-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .choice-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--cream);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-btn:hover {
+            background: var(--gold);
+            color: var(--deep-forest);
+        }
+
+        .quiz-feedback {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            min-height: 20px;
+            color: var(--soft-gold);
+            font-style: italic;
+        }
+
+        /* Countdown Grid */
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .time-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 12px 5px;
+            border-radius: 8px;
+        }
+
+        .time-box .num {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: var(--soft-gold);
+            display: block;
+        }
+
+        .time-box .label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+            color: var(--deep-forest);
+            border: none;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--soft-gold);
+            border: 1px solid var(--gold);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 480px) {
+            h1.couple-names { font-size: 2.2rem; }
+            .scratch-container { width: 100%; }
+            .actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-wrapper">
+        <div class="main-card">
+            <div class="gold-border"></div>
+
+            <div class="tagline">Save The Date</div>
+            <h1 class="couple-names">Carl & Emma</h1>
+            <p class="subtitle">Are tying the knot!</p>
+
+            <!-- Interactive Scratch Card -->
+            <div class="scratch-container">
+                <div class="scratch-reveal-content">
+                    <div class="date">DEC 22, 2026</div>
+                    <div class="venue">Calvary Baptist Church • SJDM</div>
+                </div>
+                <canvas id="scratchCanvas" width="280" height="90"></canvas>
+            </div>
+
+            <div class="instruction-hint" id="scratchHint">✨ Scratch/Drag above to reveal the date ✨</div>
+
+            <!-- Interactive Mini Quiz -->
+            <div class="interactive-zone">
+                <div class="quiz-title">Guess: Who made the first move?</div>
+                <div class="quiz-buttons">
+                    <button class="choice-btn" onclick="checkAnswer('carl')">Carl</button>
+                    <button class="choice-btn" onclick="checkAnswer('emma')">Emma</button>
+                    <button class="choice-btn" onclick="checkAnswer('both')">It was mutual!</button>
+                </div>
+                <div class="quiz-feedback" id="quizFeedback"></div>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="timer-grid">
+                <div class="time-box"><span class="num" id="d">00</span><span class="label">Days</span></div>
+                <div class="time-box"><span class="num" id="h">00</span><span class="label">Hours</span></div>
+                <div class="time-box"><span class="num" id="m">00</span><span class="label">Mins</span></div>
+                <div class="time-box"><span class="num" id="s">00</span><span class="label">Secs</span></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions">
+                <button class="action-btn btn-primary" onclick="addToCalendar()">
+                    📅 Add to Calendar
+                </button>
+                <button class="action-btn btn-secondary" onclick="triggerConfetti()">
+                    🥂 Send Love
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Scratch Card Canvas Logic ---
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let scratchedPixels = 0;
+
+        // Fill with metallic gold scratch layer
+        ctx.fillStyle = '#c5a059';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add overlay text to scratch layer
+        ctx.fillStyle = '#333';
+        ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SCRATCH HERE WITH CURSOR/FINGER', canvas.width / 2, canvas.height / 2 + 5);
+
+        function scratch(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, 18, 0, Math.PI * 2);
+            ctx.fill();
+
+            checkScratchPercentage();
+        }
+
+        function checkScratchPercentage() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let clearPixels = 0;
+            for (let i = 3; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] === 0) clearPixels++;
+            }
+            if (clearPixels / (canvas.width * canvas.height) > 0.45) {
+                canvas.style.transition = 'opacity 0.6s ease';
+                canvas.style.opacity = '0';
+                setTimeout(() => canvas.remove(), 600);
+                document.getElementById('scratchHint').innerText = "🎉 Date Revealed! We can't wait to see you!";
+                triggerConfetti();
+            }
+        }
+
+        canvas.addEventListener('mousedown', () => isDrawing = true);
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('touchstart', () => isDrawing = true);
+        canvas.addEventListener('touchend', () => isDrawing = false);
+        canvas.addEventListener('touchmove', scratch);
+
+        // --- 2. Interactive Story Quiz ---
+        function checkAnswer(choice) {
+            const feedback = document.getElementById('quizFeedback');
+            if (choice === 'carl') {
+                feedback.innerText = "Bingo! Carl gathered the courage first! 100 points for you! 🎯";
+                triggerConfetti();
+            } else if (choice === 'emma') {
+                feedback.innerText = "Close! Emma definitely made him work for it though! 😉";
+            } else {
+                feedback.innerText = "Sparks flew from both sides, but Carl officially made the first move! 💫";
+            }
+        }
+
+        // --- 3. Live Countdown Timer ---
+        const targetDate = new Date(2026, 11, 22, 14, 0, 0).getTime(); // Dec 22, 2026
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+
+            if (diff > 0) {
+                document.getElementById('d').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+                document.getElementById('h').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById('m').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('s').innerText = Math.floor((diff % (1000 * 60)) / 1000);
+            }
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // --- 4. Interactive Confetti Effect ---
+        function triggerConfetti() {
+            confetti({
+                particleCount: 70,
+                spread: 60,
+                origin: { y: 0.7 },
+                colors: ['#d4af37', '#ffffff', '#0f382c']
+            });
+        }
+
+        // --- 5. Add to Google Calendar Link Generator ---
+        function addToCalendar() {
+            const title = encodeURIComponent("Carl & Emma's Wedding");
+            const details = encodeURIComponent("Save the date for Carl & Emma's special day at Calvary Baptist Church - SJDM!");
+            const location = encodeURIComponent("Calvary Baptist Church, San Jose del Monte");
+            const dates = "20261222T060000Z/20261222T120000Z";
+            
+            const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+            window.open(gcalUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
